@@ -2,3 +2,7 @@
 data
 test_data
 **/*.pyc
+.ipynb_checkpoints
+log
+models
+model_predictions
