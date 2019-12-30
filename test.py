@@ -10,7 +10,7 @@ experiment = Experiment(api_key="i9Sew6Jy0Z36IZaUfJuR0cxhT",
                         project_name="general", workspace="mandark")
 NFOLDS = 3
 batch_size = 32
-epochs = 10
+epochs = 7
 learning_rate = 0.001
 model_name = "densenet121_v2"
 params = {
