@@ -1,6 +1,6 @@
 from comet_ml import Experiment
 import numpy as np
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from sklearn.metrics import confusion_matrix
 from utils import evaluate_model, load_dataset, crossval_ds, get_labels, class_weight, plot_confusion_matrix
 from models import *
@@ -30,12 +30,15 @@ for fold in range(3):
         callbacks = [
             ModelCheckpoint(
                 f"models/{model_name}{fold}_checkpoint", monitor='f1', save_best_only=True),
+            EarlyStopping(monitor='f1', patience=3, verbose=1,
+                          restore_best_weights=True),
+
         ]
         train_dataset = crossval_ds(
             dataset, n_folds=NFOLDS, val_fold_idx=fold, training=True)
         weight = class_weight(train_dataset)
-        model.fit(train_dataset.batch(batch_size),
-                  epochs=epochs, verbose=1, callbacks=callbacks,  class_weight=weight)
+        history = model.fit(train_dataset.batch(batch_size),
+                            epochs=epochs, verbose=1, callbacks=callbacks,  class_weight=weight)
 
     with experiment.test():
         print("EVALUATE")
@@ -64,9 +67,6 @@ for fold in range(3):
         experiment.log_figure(
             figure=plt, figure_name=f"Confusion Matrix, Fold {fold}")
 
-        # experiment.log_confusion_matrix(matrix=conf_matrix,
-        #                                 title=f"Confusion Matrix, Fold {fold}",
-        #                                 file_name=f"conf_matrix{fold}.json")
     print("SAVE AND EVALUATE")
     model.save(f"models/{model_name}_fold{fold}")
     evaluate_model(model, f"model_predictions/{model_name}_fold{fold}")

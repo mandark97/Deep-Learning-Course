@@ -200,3 +200,24 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     return plt
+
+
+def plot_metrics(history):
+    metrics = ['loss', 'acc', 'f1']
+    for n, metric in enumerate(metrics):
+        name = metric.replace("_", " ").capitalize()
+        plt.subplot(2, 2, n+1)
+        plt.plot(history.epoch,
+                 history.history[metric], label='Train')
+        plt.plot(history.epoch,
+                 history.history['val_'+metric], linestyle="--", label='Val')
+        plt.xlabel('Epoch')
+        plt.ylabel(name)
+        if metric == 'loss':
+            plt.ylim([0, plt.ylim()[1]])
+        elif metric == 'acc':
+            plt.ylim([0.8, 1])
+        else:
+            plt.ylim([0, 1])
+
+        plt.legend()
