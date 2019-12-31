@@ -1,9 +1,12 @@
 import tensorflow as tf
-import tensorflow_addons as tfa
-from tensorflow.keras import Sequential, layers
-from tensorflow.keras.applications import DenseNet121
-from tensorflow.keras.optimizers import Adam
+from tensorflow import keras
+from tensorflow.keras import Sequential
 from tensorflow.keras import backend as K
+from tensorflow.keras import layers
+from tensorflow.keras.applications import DenseNet121, ResNet101
+from tensorflow.keras.optimizers import Adam
+import numpy as np
+import tensorflow_addons as tfa
 
 IMAGE_SIZE = 224
 
@@ -13,6 +16,19 @@ def f1(y_true, y_pred):
     y_true = K.flatten(y_true)
     y_pred = K.flatten(y_pred)
     return 2 * (K.sum(y_true * y_pred) + K.epsilon()) / (K.sum(y_true) + K.sum(y_pred) + K.epsilon())
+
+
+METRICS = [
+    keras.metrics.TruePositives(name='tp'),
+    keras.metrics.FalsePositives(name='fp'),
+    keras.metrics.TrueNegatives(name='tn'),
+    keras.metrics.FalseNegatives(name='fn'),
+    keras.metrics.BinaryAccuracy(name='accuracy'),
+    keras.metrics.Precision(name='precision'),
+    keras.metrics.Recall(name='recall'),
+    keras.metrics.AUC(name='auc'),
+    f1
+]
 
 
 def simple_model(opts={}):
@@ -48,7 +64,7 @@ def simple_model(opts={}):
     return model
 
 
-def densenet_model(*args, **kwargs):
+def densenet_model(output_bias, *args, **kwargs):
     densenet = DenseNet121(
         weights='imagenet',
         include_top=False,
@@ -58,12 +74,34 @@ def densenet_model(*args, **kwargs):
     model.add(densenet)
     model.add(layers.GlobalAveragePooling2D())
     model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(2, activation='softmax'))
+    model.add(layers.Dense(1, activation='sigmoid'),
+              bias_initializer=output_bias)
 
     model.compile(
-        #         loss=focal_loss,
         loss='binary_crossentropy',
         optimizer=Adam(*args, **kwargs),
-        metrics=['accuracy', f1])
+        metrics=METRICS)
+
+    return model
+
+
+def resnet101_model(output_bias, learning_rate):
+    if output_bias is not None:
+        output_bias = tf.keras.initializers.Constant(output_bias)
+    resnet101 = ResNet101(weights='imagenet',
+                          include_top=False,
+                          input_shape=(224, 224, 3))
+    model = Sequential()
+    model.add(resnet101)
+    model.add(layers.GlobalAveragePooling2D())
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(1, activation='sigmoid',
+                           bias_initializer=output_bias,
+                           use_bias=True))
+
+    model.compile(
+        loss='binary_crossentropy',
+        optimizer=Adam(learning_rate=learning_rate),
+        metrics=METRICS)
 
     return model

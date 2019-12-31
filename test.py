@@ -9,10 +9,10 @@ from models import *
 experiment = Experiment(api_key="i9Sew6Jy0Z36IZaUfJuR0cxhT",
                         project_name="general", workspace="mandark")
 NFOLDS = 3
-batch_size = 32
+batch_size = 512
 epochs = 7
 learning_rate = 0.001
-model_name = "densenet121_v2"
+model_name = "resnet101_model"
 params = {
     "batch_size": batch_size,
     "epochs": epochs,
@@ -24,19 +24,21 @@ experiment.log_parameters(params)
 metrics_arr = []
 dataset = load_dataset()
 for fold in range(3):
-    model = densenet_model(learning_rate=learning_rate)
     print(f"START FOR FOLD {fold}")
     with experiment.train():
         callbacks = [
             ModelCheckpoint(
-                f"models/{model_name}{fold}_checkpoint", monitor='f1', save_best_only=True),
-            EarlyStopping(monitor='f1', patience=3, verbose=1,
-                          restore_best_weights=True),
+                f"models/{model_name}{fold}_checkpoint", monitor='auc', save_best_only=True, mode='max'),
+            EarlyStopping(monitor='aud', patience=3, verbose=1,
+                          restore_best_weights=True, mode='max'),
 
         ]
         train_dataset = crossval_ds(
             dataset, n_folds=NFOLDS, val_fold_idx=fold, training=True)
-        weight = class_weight(train_dataset)
+        weight, initial_bias = class_weight(train_dataset)
+        print(weight)
+        model = resnet101_model(output_bias=initial_bias,
+                                learning_rate=learning_rate)
         history = model.fit(train_dataset.batch(batch_size),
                             epochs=epochs, verbose=1, callbacks=callbacks,  class_weight=weight)
 
@@ -44,16 +46,9 @@ for fold in range(3):
         print("EVALUATE")
         test_dataset = crossval_ds(
             dataset, n_folds=NFOLDS, val_fold_idx=fold, training=False)
-        loss, accuracy, f1_score = model.evaluate(
+        scores = model.evaluate(
             test_dataset.batch(batch_size))
-        print(loss, accuracy, f1_score)
-        metrics = {
-            f'loss_fold{fold}': loss,
-            f'accuracy_fold{fold}': accuracy,
-            f'f1_score_fold{fold}': f1_score
-        }
-        metrics_arr.append(metrics)
-        experiment.log_metrics(metrics)
+        print(scores)
 
         print("MAKE CONFUSION MATRIX")
         y_true = get_labels(test_dataset)

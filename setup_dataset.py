@@ -14,5 +14,4 @@ def make_folders_for_labels(data_path, labels_path, file_extension="png"):
         os.rename(f"{data_path}/{label['id']}.{file_extension}",
                    f"{data_path}/{label['class']}/{label['id']}.{file_extension}")
 
-
 make_folders_for_labels("data/data", "data/train_labels.txt")
