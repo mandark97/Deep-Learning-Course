@@ -9,10 +9,10 @@ from models import *
 experiment = Experiment(api_key="i9Sew6Jy0Z36IZaUfJuR0cxhT",
                         project_name="general", workspace="mandark")
 NFOLDS = 3
-batch_size = 512
+batch_size = 256
 epochs = 7
 learning_rate = 0.001
-model_name = "resnet101_model"
+model_name = "resnet101_model_v2"
 params = {
     "batch_size": batch_size,
     "epochs": epochs,
@@ -27,10 +27,10 @@ for fold in range(3):
     print(f"START FOR FOLD {fold}")
     with experiment.train():
         callbacks = [
-            ModelCheckpoint(
-                f"models/{model_name}{fold}_checkpoint", monitor='auc', save_best_only=True, mode='max'),
-            EarlyStopping(monitor='aud', patience=3, verbose=1,
-                          restore_best_weights=True, mode='max'),
+            # ModelCheckpoint(
+            #     f"models/{model_name}{fold}_checkpoint", monitor='f1', save_best_only=True, mode='max'),
+            # EarlyStopping(monitor='f1', patience=3, verbose=1,
+            #               restore_best_weights=True, mode='max'),
 
         ]
         train_dataset = crossval_ds(
