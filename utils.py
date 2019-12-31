@@ -73,7 +73,7 @@ def zoom(x: tf.Tensor) -> tf.Tensor:
 
 def get_label(file_path):
     parts = tf.strings.split(file_path, '/')
-    return parts[-2] == np.array(['0', '1'])
+    return int(parts[-2])
 
 
 def decode_img(img):
@@ -127,17 +127,6 @@ def crossval_ds(dataset, n_folds: int, val_fold_idx: int, training: bool = True)
     else:
         dataset = dataset.shard(n_folds, val_fold_idx)
     return dataset
-# train_size = int(0.7 * DATASET_SIZE)
-# val_size = int(0.15 * DATASET_SIZE)
-# test_size = int(0.15 * DATASET_SIZE)
-
-# full_dataset = labeled_ds.shuffle(5000)
-# train_dataset = full_dataset.take(train_size)
-# test_dataset = full_dataset.skip(train_size)
-# val_dataset = test_dataset.skip(val_size).batch(32)
-# test_dataset = test_dataset.take(test_size).batch(32)
-
-# return train_dataset, val_dataset, test_dataset
 
 
 def process_test_path(file_path):
@@ -158,7 +147,7 @@ def evaluate_model(model, model_name):
 
 # wtf tensorflow
 def get_labels(dataset):
-    return [y.numpy().argmax() for x, y in dataset]
+    return [y.numpy() for x, y in dataset]
 
 
 def class_weight(dataset):
