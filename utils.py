@@ -156,7 +156,7 @@ def class_weight(dataset):
     total = len(y)
     weight_for_0 = (1 / counter[0])*(total)/2.0
     weight_for_1 = (1 / counter[1])*(total)/2.0
-    return {0: weight_for_0, 1: weight_for_1}
+    return {0: weight_for_0, 1: weight_for_1}, np.log([counter[1]/counter[0]])
 
 
 def plot_confusion_matrix(cm, classes,
