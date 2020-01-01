@@ -85,7 +85,7 @@ def densenet_model(output_bias, *args, **kwargs):
     return model
 
 
-def resnet101_model(output_bias, learning_rate, metrics=METRICS):
+def resnet101_model(learning_rate, output_bias=None,  metrics=METRICS):
     if output_bias is not None:
         output_bias = tf.keras.initializers.Constant(output_bias)
     resnet101 = ResNet101(weights='imagenet',
