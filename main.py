@@ -1,23 +1,26 @@
 from comet_ml import Experiment
 import numpy as np
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
-from sklearn.metrics import confusion_matrix
-from utils import evaluate_model, load_dataset, crossval_ds, get_labels, class_weight, plot_confusion_matrix
-from models import *
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
+from dataset import *
+from models import *
+from sklearn.metrics import confusion_matrix
+from utils import *
+from visualization import *
 
 experiment = Experiment(api_key="i9Sew6Jy0Z36IZaUfJuR0cxhT",
                         project_name="general", workspace="mandark")
 NFOLDS = 3
-batch_size = 256
-epochs = 7
-learning_rate = 0.001
-model_name = "resnet101_model_v2"
+batch_size = 32
+epochs = 15
+learning_rate = 0.0005
+model_name = "resnet101_model_v3"
 params = {
     "batch_size": batch_size,
     "epochs": epochs,
     "learning_rate": learning_rate,
     "model_name": model_name,
+    "output_bias": False
 }
 experiment.log_parameters(params)
 
@@ -27,20 +30,23 @@ for fold in range(3):
     print(f"START FOR FOLD {fold}")
     with experiment.train():
         callbacks = [
-            # ModelCheckpoint(
-            #     f"models/{model_name}{fold}_checkpoint", monitor='f1', save_best_only=True, mode='max'),
-            # EarlyStopping(monitor='f1', patience=3, verbose=1,
-            #               restore_best_weights=True, mode='max'),
-
+            ModelCheckpoint(
+                f"models/{model_name}{fold}_checkpoint", monitor='val_auc', save_best_only=True, mode='max'),
+            EarlyStopping(monitor='val_auc', patience=3, verbose=1,
+                          restore_best_weights=True, mode='max'),
         ]
         train_dataset = crossval_ds(
             dataset, n_folds=NFOLDS, val_fold_idx=fold, training=True)
         weight, initial_bias = class_weight(train_dataset)
         print(weight)
-        model = resnet101_model(output_bias=initial_bias,
-                                learning_rate=learning_rate)
+
+        model = resnet101_model(learning_rate=learning_rate)
         history = model.fit(train_dataset.batch(batch_size),
-                            epochs=epochs, verbose=1, callbacks=callbacks,  class_weight=weight)
+                            epochs=epochs, verbose=1, validation_split=0.15, callbacks=callbacks,  class_weight=weight)
+
+        plt = plot_metrics(history)
+        experiment.log_figure(
+            figure=plt, figure_name=f"Metrics History, Fold {fold}")
 
     with experiment.test():
         print("EVALUATE")
@@ -48,16 +54,18 @@ for fold in range(3):
             dataset, n_folds=NFOLDS, val_fold_idx=fold, training=False)
         scores = model.evaluate(
             test_dataset.batch(batch_size))
-        print(scores)
+        metrics = dict(zip(model.metrics_names, scores))
+        print(metrics)
+        experiment.log_metrics(metrics, prefix=f"fold{fold}")
 
         print("MAKE CONFUSION MATRIX")
         y_true = get_labels(test_dataset)
-        y_pred = np.argmax(
-            model.predict(test_dataset.batch(batch_size)),
-            axis=1)
+        y_pred = model.predict(test_dataset.batch(batch_size))
+        y_pred = parse_predict(y_pred)
 
         conf_matrix = confusion_matrix(y_true, y_pred)
         print(conf_matrix)
+
         plt = plot_confusion_matrix(conf_matrix, ['0', '1'])
         experiment.log_figure(
             figure=plt, figure_name=f"Confusion Matrix, Fold {fold}")
