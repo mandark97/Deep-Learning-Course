@@ -37,12 +37,14 @@ for fold in range(3):
         ]
         train_dataset = crossval_ds(
             dataset, n_folds=NFOLDS, val_fold_idx=fold, training=True)
+        test_dataset = crossval_ds(
+            dataset, n_folds=NFOLDS, val_fold_idx=fold, training=False)
         weight, initial_bias = class_weight(train_dataset)
         print(weight)
 
         model = resnet101_model(learning_rate=learning_rate)
         history = model.fit(train_dataset.batch(batch_size),
-                            epochs=epochs, verbose=1, validation_split=0.15, callbacks=callbacks,  class_weight=weight)
+                            epochs=epochs, verbose=1, validation_data=test_dataset.batch(batch_size), callbacks=callbacks,  class_weight=weight)
 
         plt = plot_metrics(history)
         experiment.log_figure(
@@ -50,8 +52,6 @@ for fold in range(3):
 
     with experiment.test():
         print("EVALUATE")
-        test_dataset = crossval_ds(
-            dataset, n_folds=NFOLDS, val_fold_idx=fold, training=False)
         scores = model.evaluate(
             test_dataset.batch(batch_size))
         metrics = dict(zip(model.metrics_names, scores))
