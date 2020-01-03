@@ -1,7 +1,7 @@
 import pandas as pd
 import tensorflow as tf
 
-from dataset import AUTOTUNE, process_test_path
+from tf_dataset import AUTOTUNE, process_test_path
 
 
 def evaluate_model(model, model_name):

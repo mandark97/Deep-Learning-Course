@@ -64,7 +64,9 @@ def simple_model(opts={}):
     return model
 
 
-def densenet_model(output_bias, *args, **kwargs):
+def densenet_model(learning_rate, output_bias=None, metrics=METRICS):
+    if output_bias is not None:
+        output_bias = tf.keras.initializers.Constant(output_bias)
     densenet = DenseNet121(
         weights='imagenet',
         include_top=False,
@@ -74,13 +76,14 @@ def densenet_model(output_bias, *args, **kwargs):
     model.add(densenet)
     model.add(layers.GlobalAveragePooling2D())
     model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(1, activation='sigmoid'),
-              bias_initializer=output_bias)
+    model.add(layers.Dense(1, activation='sigmoid',
+                           bias_initializer=output_bias,
+                           use_bias=True))
 
     model.compile(
         loss='binary_crossentropy',
-        optimizer=Adam(*args, **kwargs),
-        metrics=METRICS)
+        optimizer=Adam(learning_rate=learning_rate),
+        metrics=metrics)
 
     return model
 
