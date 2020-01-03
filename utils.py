@@ -1,13 +1,16 @@
 import pandas as pd
-import tensorflow as tf
+import cv2
+import numpy as np
 
-from tf_dataset import AUTOTUNE, process_test_path
+
+def form_img_path(x, path="unibuc-2019-m2-cv/data/data"):
+    return f"{path}/{'0'* (6-len(str(x)))}{x}.png"
 
 
 def evaluate_model(model, model_name):
-    list_ds = tf.data.Dataset.list_files("data/test/*")
-    test_ds = list_ds.map(process_test_path, num_parallel_calls=AUTOTUNE)
-    y = model.predict(test_ds.batch(32))
+    img_list = [form_img_path(x) for x in range(17001, 22150)]
+    X_test = np.array([cv2.imread(img) for img in img_list])
+    y = model.predict(X_test, batch_size=32)
     ans_df = pd.DataFrame({'id': [f"{'0'* (6-len(str(x)))}{x}" for x in range(17001, 22150)],
                            'class': parse_predict(y)})
     ans_df.to_csv(f'{model_name}.csv', index=False)
