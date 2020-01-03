@@ -1,6 +1,6 @@
 from comet_ml import Experiment
 import numpy as np
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 from sklearn.model_selection import StratifiedKFold
 
 from dataset import *
@@ -52,6 +52,8 @@ for train_index, test_index in skf.split(X, y):
         # experiment.log_figure(
         #     figure=plt, figure_name=f"Metrics History, Fold {fold}")
 
+    model.save(f"models/{model_name}_fold{fold}")
+
     with experiment.test():
         print("EVALUATE")
         scores = model.evaluate(X_test, y_test, batch_size=batch_size)
@@ -60,7 +62,7 @@ for train_index, test_index in skf.split(X, y):
         experiment.log_metrics(metrics, prefix=f"fold{fold}")
 
         print("MAKE CONFUSION MATRIX")
-        y_pred = model.predict(X_test)
+        y_pred = model.predict(X_test, batch_size=batch_size)
         y_pred = parse_predict(y_pred)
 
         conf_matrix = confusion_matrix(y_test, y_pred)
@@ -71,7 +73,6 @@ for train_index, test_index in skf.split(X, y):
             figure=plt, figure_name=f"Confusion Matrix, Fold {fold}")
 
     print("SAVE AND EVALUATE")
-    model.save(f"models/{model_name}_fold{fold}")
     # evaluate_model(model, f"model_predictions/{model_name}_fold{fold}")
 
     fold = fold + 1
