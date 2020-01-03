@@ -13,7 +13,7 @@ experiment = Experiment(api_key="i9Sew6Jy0Z36IZaUfJuR0cxhT",
                         project_name="general", workspace="mandark")
 NFOLDS = 3
 batch_size = 32
-epochs = 10
+epochs = 5
 learning_rate = 0.0005
 model_name = "densenet121_v4"
 params = {
@@ -33,10 +33,10 @@ for train_index, test_index in skf.split(X, y):
     print(f"START FOR FOLD {fold}")
     with experiment.train():
         callbacks = [
-            ModelCheckpoint(
-                f"models/{model_name}{fold}_checkpoint", monitor='val_auc', save_best_only=True, mode='max'),
-            EarlyStopping(monitor='val_auc', patience=3, verbose=1,
-                          restore_best_weights=True, mode='max'),
+            # ModelCheckpoint(
+            #     f"models/{model_name}{fold}_checkpoint", monitor='val_auc', save_best_only=True, mode='max'),
+            # EarlyStopping(monitor='val_auc', patience=3, verbose=1,
+            #               restore_best_weights=True, mode='max'),
         ]
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
@@ -48,9 +48,9 @@ for train_index, test_index in skf.split(X, y):
         history = model.fit(X_train, y_train, batch_size=batch_size,
                             epochs=epochs, verbose=1, callbacks=callbacks)
 
-        plt = plot_metrics(history)
-        experiment.log_figure(
-            figure=plt, figure_name=f"Metrics History, Fold {fold}")
+        # plt = plot_metrics(history)
+        # experiment.log_figure(
+        #     figure=plt, figure_name=f"Metrics History, Fold {fold}")
 
     with experiment.test():
         print("EVALUATE")
