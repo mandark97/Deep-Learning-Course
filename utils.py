@@ -11,7 +11,9 @@ PATH = '/unibuc-2019-m2-cv'
 
 def form_img_path(x, extension='', path=''):
     prefix = '0' * (6-len(str(x)))
-    return f'{path}/{prefix}{x}{extension}'
+    if path:
+        path = path + "/"
+    return f'{path}{prefix}{x}{extension}'
 
 
 def load_dataset(train_labels_path=f'{PATH}/train_labels.txt', img_path=f'{PATH}/data/data'):
