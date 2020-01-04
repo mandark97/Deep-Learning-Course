@@ -52,7 +52,7 @@ def save_metrics(scores, metrics_names, output_path):
         json.dump(metrics, json_file)
 
 
-def evaluate_fold(model_klass, training_data, test_data, batch_size, learning_rate, epochs, fold, input_path, output_path, output_bias=None):
+def evaluate_fold(model_klass, training_data, test_data, batch_size, learning_rate, epochs, fold, input_path, output_path, class_weight=None, output_bias=None):
     model = build_model(model_klass, learning_rate, output_bias)
 
     X_train, y_train = training_data
@@ -60,6 +60,7 @@ def evaluate_fold(model_klass, training_data, test_data, batch_size, learning_ra
                         batch_size=batch_size,
                         epochs=epochs,
                         validation_split=0.15,
+                        class_weight=class_weight,
                         verbose=1,
                         callbacks=callbacks(checkpoint_path=f'{output_path}/{fold}_checkpoint.h5'))
     model.save(f'{output_path}/fold{fold}.h5')

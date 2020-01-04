@@ -34,6 +34,15 @@ def output_bias(y):
     return np.log([pos/neg])
 
 
+def class_weight(y):
+    neg, pos = np.bincount(y)
+    total = neg + pos
+    weight_for_0 = (1.0/neg)*(total)/2.0
+    weight_for_1 = (1.0/pos)*(total)/2.0
+
+    return {0: weight_for_0, 1: weight_for_1}
+
+
 def parse_predict(y_pred):
     return (y_pred.flatten() > 0.5).astype(int)
 

@@ -1,7 +1,7 @@
 from sklearn.model_selection import StratifiedKFold
 
 from models import *
-from utils import load_dataset, output_bias
+from utils import load_dataset, output_bias, class_weight
 from trainer import evaluate_fold
 NFOLDS = 3
 INPUT_PATH = 'unibuc-2019-m2-cv'
@@ -12,11 +12,21 @@ epochs = 5
 learning_rate = 0.0005
 model_name = "densenet121_v4"
 model_klass = densenet_model
-
+use_output_bias = True
+use_class_weight = True
 
 X, y = load_dataset(train_labels_path=f'{INPUT_PATH}/train_labels.txt',
                     img_path=f'{INPUT_PATH}/data/data')
-initial_bias = output_bias(y)
+
+if use_output_bias:
+    initial_bias = output_bias(y)
+else:
+    initial_bias = None
+
+if use_class_weight:
+    class_weight = class_weight(y)
+else:
+    class_weight = None
 
 skf = StratifiedKFold(n_splits=NFOLDS, shuffle=True)
 split_gen = skf.split(X, y)
@@ -35,6 +45,7 @@ for train_index, test_index in split_gen:
                   epochs=epochs,
                   fold=fold,
                   output_bias=initial_bias,
+                  class_weight=class_weight,
                   output_path=OUTPUT_PATH,
                   input_path=INPUT_PATH)
     fold += 1
