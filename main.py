@@ -49,3 +49,5 @@ for train_index, test_index in split_gen:
                   output_path=OUTPUT_PATH,
                   input_path=INPUT_PATH)
     fold += 1
+
+evaluate_folds(model_name, OUTPUT_PATH)

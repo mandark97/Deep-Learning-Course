@@ -15,13 +15,7 @@ def run_from_save(model_path, img_path, output_path):
                   img_path=img_path)
 
 
-# run_from_save("resnet101_model_v2_fold2")
-# evaluate_folds("resnet_weights_bias", '/home/matei/Downloads/resnet11')
-
-
 def get_results():
-    metrics = ["accuracy", "precision", "recall", "auc", "f1"]
-    # results_path = results
     for dir1 in os.listdir("results"):
         for dir2 in os.listdir(f"results/{dir1}"):
             results = defaultdict(list)
@@ -36,5 +30,3 @@ def get_results():
 
             with open(f"results/{dir1}/{dir2}/results.json", 'w') as out_file:
                 json.dump(avg_results, out_file)
-
-get_results()
