@@ -47,6 +47,7 @@ def parse_predict(y_pred):
     return (y_pred.flatten() > 0.5).astype(int)
 
 
+# predict on test data
 def run_test_data(model,  output_file, img_path=f'{PATH}/data/data'):
     img_list = [form_img_path(x, extension='.png', path=img_path)
                 for x in range(17001, 22150)]
@@ -59,6 +60,7 @@ def run_test_data(model,  output_file, img_path=f'{PATH}/data/data'):
     ans_df.to_csv(output_file, index=False)
 
 
+# combine the result of the folds by selecting the class with most votes
 def evaluate_folds(model_name, path):
     folds = []
     for fold in range(3):
